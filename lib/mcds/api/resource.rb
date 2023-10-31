@@ -1,5 +1,7 @@
 require 'faraday'
 require 'json'
+require 'uri'
+require 'base64'
 
 module Mcds
   module Api
@@ -8,6 +10,7 @@ module Mcds
         @endpoint = endpoint
         @params = params
         @uuid = uuid
+
         @url = Mcds.url
         @username = Mcds.user_name_or_api_key
         @password = Mcds.password_or_x
@@ -23,15 +26,6 @@ module Mcds
         @params.to_json
       end
 
-      def post
-        Faraday.post(api_url, json_payload, headers).then do |response|
-          return JSON.parse(response.body)
-
-        rescue StandardError
-          raise Faraday::BadRequestError, api_error_message(response)
-        end
-      end
-
       def get
         Faraday.get(api_url, params, headers).then do |response|
           return {
@@ -39,6 +33,15 @@ module Mcds
             status: response.status,
             status_message: response.reason_phrase
           }
+
+        rescue StandardError
+          raise Faraday::BadRequestError, api_error_message(response)
+        end
+      end
+
+      def post
+        Faraday.post(api_url, json_payload, headers).then do |response|
+          return JSON.parse(response.body)
 
         rescue StandardError
           raise Faraday::BadRequestError, api_error_message(response)
